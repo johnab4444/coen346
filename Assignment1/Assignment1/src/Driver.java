@@ -2,9 +2,9 @@
 public class Driver {
 	public static int threadCount = 0;
 
-	public static void main(String[] args) {
-		int[] arr = {1,1,0,1,1,0,1,1};
-		int[] pos = {1,2,3,4,5,6,7,8};
+	public static void main(String[] args) throws InterruptedException {
+		int[] arr = {1,1,0,1,1,0,1,1,0,1,1,0,0,1,0,0};
+		int[] pos = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 		BulbList bulbs = new BulbList(arr.length);
 		
 		FindDefective(arr,pos,bulbs);
@@ -30,7 +30,7 @@ public class Driver {
 		return false;
 	}
 	
-	public static void FindDefective(int[] arr,int[] pos,BulbList bulbs) {
+	public static void FindDefective(int[] arr,int[] pos,BulbList bulbs) throws InterruptedException {
 		threadCount++;
 		if(arr.length == 1 && arr[0] == 0) {
 			bulbs.register(pos[0]);
@@ -55,8 +55,28 @@ public class Driver {
 				rightArr[i] = arr[i+mid];
 				rightPos[i] = pos[i+mid];
 			}
-			FindDefective(leftArr,leftPos,bulbs);
-			FindDefective(rightArr,rightPos,bulbs);
+			Thread thread1 = new Thread(new Runnable() {
+				public void run() {
+					try {
+						FindDefective(leftArr,leftPos,bulbs);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			thread1.start();
+			thread1.join();
+			Thread thread2 = new Thread(new Runnable() {
+				public void run() {
+					try {
+						FindDefective(rightArr,rightPos,bulbs);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			thread2.start();
+			thread2.join();
 		}
 	}
 
