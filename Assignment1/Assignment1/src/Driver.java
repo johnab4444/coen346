@@ -1,8 +1,9 @@
-
+import java.util.Scanner;
+import java.io.*;
 public class Driver {
 	public static int threadCount = 0;
 
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) throws InterruptedException{
 		int[] arr = {1,1,0,1,1,0,1,1,0,1,1,0,0,1,0,0};
 		int[] pos = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 		BulbList bulbs = new BulbList(arr.length);
@@ -94,8 +95,6 @@ public class Driver {
 					}
 				}
 			});
-			thread1.start();
-			thread1.join();
 			
 			/*this thread will handle right array*/
 			Thread thread2 = new Thread(new Runnable() {
@@ -107,7 +106,9 @@ public class Driver {
 					}
 				}
 			});
+			thread1.start();
 			thread2.start();
+			thread1.join();
 			thread2.join();
 		}
 	}
