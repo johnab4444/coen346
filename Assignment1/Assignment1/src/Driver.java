@@ -4,11 +4,22 @@ public class Driver {
 	public static int threadCount = 0;
 
 	public static void main(String[] args) throws InterruptedException{
+		
+		Scanner inFile = new Scanner(System.in);
+		int[] input = readFile(inFile).split("\\n+");
+		int[] bulbArray = new int[input[0]];
+		
+		for(int i =0; i< input.length()-1; i++){
+			bulbArray[i] = input[i+1];
+		}
+		
+		/*
 		int[] arr = {1,1,0,1,1,0,1,1,0,1,1,0,0,1,0,0};
 		int[] pos = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-		BulbList bulbs = new BulbList(arr.length);
+		*/
+		BulbList bulbs = new BulbList(bulbArray.length);
 		
-		FindDefective(arr,pos,bulbs);
+		FindDefective(bulbArray,pos,bulbs);
 		
 		int[] burntBulbs = bulbs.getList();
 		
