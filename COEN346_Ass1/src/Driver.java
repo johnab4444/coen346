@@ -41,7 +41,7 @@ public class Driver {
 		}else {
 			System.out.print("The defective bulbs are: ");
 			for(int i=0;i<bulbs.burntCount();i++) {
-				if(burntBulbs[i+1] == bulbs.burntCount()) {
+				if(i+1 == bulbs.burntCount()) {
 					System.out.print("and #" + burntBulbs[i]);
 				}
 				else {
