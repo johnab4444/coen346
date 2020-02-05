@@ -32,18 +32,15 @@ public class Driver {
 		//get the list of defective bulbs
 		int[] burntBulbs = bulbs.getList();
 		
-		if(burntBulbs[0] == 0) {
+		if(bulbs.burntCount() == 0) {
 			System.out.println("There are no defective bulbs");
 		}
-		else if(burntBulbs.length == 1) {
+		else if(bulbs.burntCount() == 1) {
 			System.out.println("Bulb #" + burntBulbs[0] + " is defective");
 		}else {
 			System.out.print("The defective bulbs are: ");
-			for(int i=0;i<burntBulbs.length;i++) {
-				if(burntBulbs[i]==0) {
-					break;
-				}
-				if(burntBulbs[i+1] == 0) {
+			for(int i=0;i<bulbs.burntCount();i++) {
+				if(burntBulbs[i+1] == bulbs.burntCount()) {
 					System.out.println("and #" + burntBulbs[i]);
 				}
 				else {
