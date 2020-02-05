@@ -2,16 +2,20 @@ import java.util.Scanner;
 import java.io.*;
 
 public class Driver {
+	//declare gobal variable to keep track of thread count
 	public static int threadCount = 0;
 
 	public static void main(String[] args) throws InterruptedException, IOException{
 		
+		//read input file
 		Scanner inFile = new Scanner(new File("C:\\Users\\Joe\\Desktop\\coen346\\COEN346_Ass1\\src\\input.txt"));
 		
+		//declare arrays for the list of bulbs and their positions 
 		int[] bulbArray = new int[Integer.parseInt(inFile.nextLine())];
 		int[] pos = new int[bulbArray.length];
 		int j = 0;
 		
+		//initialize the arrays using the input file data and position incremented by 1 for each input value
 		while(inFile.hasNextLine()) {
 			bulbArray[j] = Integer.parseInt(inFile.nextLine());
 			pos[j++] = j;
@@ -19,10 +23,13 @@ public class Driver {
 		
 		inFile.close();
 		
+		// create a new object of helper class to keep track of burnt bulb positions
 		BulbList bulbs = new BulbList(bulbArray.length);
 		
+		//call function to find all defective bulbs
 		FindDefective(bulbArray,pos,bulbs);
 		
+		//get the list of defective bulbs
 		int[] burntBulbs = bulbs.getList();
 		
 		if(burntBulbs.length == 0) {
