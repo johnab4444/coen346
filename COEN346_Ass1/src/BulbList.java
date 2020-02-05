@@ -14,5 +14,9 @@ public class BulbList {
 	public int[] getList() {
 		return bulbNum;			//return the array of burnt bulb positions to caller
 	}
+	
+	public int burntCount(){
+		return bulbCount;		//return number of burnt bulbs
+	}
 
 }
