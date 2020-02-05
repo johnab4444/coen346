@@ -8,7 +8,7 @@ public class Driver {
 	public static void main(String[] args) throws InterruptedException, IOException{
 		
 		//read input file
-		Scanner inFile = new Scanner(new File("C:\\Users\\Joe\\Desktop\\coen346\\COEN346_Ass1\\src\\input.txt"));
+		Scanner inFile = new Scanner(new File("C:\\Users\\johna\\Desktop\\coen346\\COEN346_Ass1\\src\\input.txt"));
 		
 		//declare arrays for the list of bulbs and their positions 
 		int[] bulbArray = new int[Integer.parseInt(inFile.nextLine())];
@@ -37,12 +37,12 @@ public class Driver {
 			System.out.println("There are no defective bulbs");
 		}
 		else if(bulbs.burntCount() == 1) {
-			System.out.println("Bulb #" + burntBulbs[0] + " is defective");
+			System.out.print("Bulb #" + burntBulbs[0] + " is defective");
 		}else {
 			System.out.print("The defective bulbs are: ");
 			for(int i=0;i<bulbs.burntCount();i++) {
 				if(burntBulbs[i+1] == bulbs.burntCount()) {
-					System.out.println("and #" + burntBulbs[i]);
+					System.out.print("and #" + burntBulbs[i]);
 				}
 				else {
 					System.out.print("#" + burntBulbs[i]+", ");
@@ -50,8 +50,8 @@ public class Driver {
 			}
 		}
 		
-		//print statment for number of threads generated
-		System.out.println("The thread count is " + threadCount);
+		//print statement for number of threads generated
+		System.out.println("\n" + "The thread count is " + threadCount);
 
 	}
 	
