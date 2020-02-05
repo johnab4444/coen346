@@ -32,7 +32,7 @@ public class Driver {
 		//get the list of defective bulbs
 		int[] burntBulbs = bulbs.getList();
 		
-		if(burntBulbs.length == 0) {
+		if(burntBulbs[0] == 0) {
 			System.out.println("There are no defective bulbs");
 		}
 		else if(burntBulbs.length == 1) {
