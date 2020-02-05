@@ -32,6 +32,7 @@ public class Driver {
 		//get the list of defective bulbs
 		int[] burntBulbs = bulbs.getList();
 		
+		//select and generate correct output depending on # of burnt bulbs found
 		if(bulbs.burntCount() == 0) {
 			System.out.println("There are no defective bulbs");
 		}
@@ -48,6 +49,8 @@ public class Driver {
 				}
 			}
 		}
+		
+		//print statment for number of threads generated
 		System.out.println("The thread count is " + threadCount);
 
 	}
