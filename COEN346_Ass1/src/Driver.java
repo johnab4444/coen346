@@ -8,7 +8,7 @@ public class Driver {
 	public static void main(String[] args) throws InterruptedException, IOException{
 		
 		//read input file
-		Scanner inFile = new Scanner(new File("C:\\Users\\johna\\Desktop\\coen346\\COEN346_Ass1\\src\\input.txt"));
+		Scanner inFile = new Scanner(new File("input.txt"));
 		
 		//declare arrays for the list of bulbs and their positions 
 		int[] bulbArray = new int[Integer.parseInt(inFile.nextLine())];
