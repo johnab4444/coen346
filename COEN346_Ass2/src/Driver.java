@@ -15,11 +15,14 @@ public class Driver {
             threads[i] = new Thread(new Scheduler(processList[i], readyQueue), "Process " + processList[i].getId());
         }
 
-        for(int i=0;i<threads.length;i++){
+        for (int i = 0; i < threads.length; i++) {
             threads[i].start();
         }
 
+
     }
+
+
 
     public static Process[] listBuilder(double a[], double b[]){
         Process[] list = new Process[3];

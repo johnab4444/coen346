@@ -4,6 +4,7 @@ public class ReadyQueue<Key> {
     private Process[] pq;                 // store items at indices 1 to n
     private int n;          // number of items on priority queue
     private double totalTime = 1;
+    private int proCount;
 
     public synchronized double getTotalTime(){
         return this.totalTime;
@@ -16,6 +17,15 @@ public class ReadyQueue<Key> {
     public ReadyQueue(int size) {
         pq = new Process[size + 1];
         n = 0;
+        proCount = size;
+    }
+
+    public void processDone(){
+        proCount--;
+    }
+
+    public int getProCount(){
+        return proCount;
     }
 
     public boolean isEmpty() {
@@ -64,9 +74,19 @@ public class ReadyQueue<Key> {
     }
 
     public synchronized boolean myTurn(Process pro){
-        if(pro.getArrivalTime() > totalTime) return false;
-        else if(pro.isNewbie()) return true;
-        else return pro.getId() == min();
+        if(pro.isNewbie()) return true;
+        else if(someoneNew(pro)) {
+            return false;
+        }else {
+            return pro.getId() == min();
+        }
+    }
+
+    public boolean someoneNew(Process pro){
+        for(int i = 1; i<=n; i++){
+            if(pq[i].isNewbie() && pq[i].getId() != pro.getId()) return true;
+        }
+        return false;
     }
 
     private boolean greater(int i, int j) {

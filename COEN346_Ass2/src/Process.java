@@ -4,6 +4,7 @@ public class Process {
     private double remainingTime;
     private double completionTime;
     private boolean newbie;
+    private boolean done = false;
     private int id;
 
     public Process(double a, double b, int id){
@@ -14,6 +15,12 @@ public class Process {
         this.id = id;
     }
 
+    public boolean isDone(){
+        return this.done;
+    }
+    public void allDone(){
+        this.done = true;
+    }
     public int getId(){
         return this.id;
     }
