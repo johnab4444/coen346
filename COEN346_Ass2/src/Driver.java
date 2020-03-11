@@ -1,9 +1,9 @@
 public class Driver {
     private static int count = 1;
     private static double totalTime = 1;
-    public static void main(String[] args) {
-        double[] a = new double[]{1, 2, 3};
-        double[] b = new double[]{5, 3, 1};
+    public static void main(String[] args) throws InterruptedException {
+        double[] a = new double[]{1, 2, 3, 4};
+        double[] b = new double[]{5, 3, 1, 6};
 
         Process[] processList = new Process[a.length];
         processList = listBuilder(a, b);
@@ -19,13 +19,20 @@ public class Driver {
             threads[i].start();
         }
 
+        for (int i = 0; i < threads.length; i++) {
+            threads[i].join();
+        }
+
+        System.out.println(processList[0].waitTime());
+
+
 
     }
 
 
 
     public static Process[] listBuilder(double a[], double b[]){
-        Process[] list = new Process[3];
+        Process[] list = new Process[a.length];
 
         for(int i = 0;i<list.length;i++){
             list[i] = new Process(a[i], b[i], count++);

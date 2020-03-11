@@ -36,12 +36,11 @@ public class Scheduler extends Thread{
                     System.out.println("Time " + readyQueue.getTotalTime() + ", " + Thread.currentThread().getName() + ", Finished");
                 }
                 if (this.readyQueue.isInQueue(this.process.getId()) && readyQueue.myTurn(this.process)) {
-                    System.out.println("newbie is: " + this.process.isNewbie());
                     if (this.process.isNewbie()) {
                         System.out.println("Time " + readyQueue.getTotalTime() + ", " + Thread.currentThread().getName() + ", Started");
                         readyQueue.setTotalTime(this.process.quantum());
                         System.out.println("Time " + readyQueue.getTotalTime() + ", " + Thread.currentThread().getName() + ", Paused");
-                        if (readyQueue.isInQueue(this.process.getId())) System.out.println("its here");
+                        readyQueue.notifyAll();
                         readyQueue.wait();
                     } else {
                         readyQueue.delMin();

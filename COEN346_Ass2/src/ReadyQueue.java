@@ -82,9 +82,9 @@ public class ReadyQueue<Key> {
         }
     }
 
-    public boolean someoneNew(Process pro){
+    public synchronized boolean someoneNew(Process pro){
         for(int i = 1; i<=n; i++){
-            if(pq[i].isNewbie() && pq[i].getId() != pro.getId()) return true;
+            if(pq[i].getArrivalTime() < totalTime && pq[i].isNewbie()) return true;
         }
         return false;
     }
