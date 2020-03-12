@@ -1,11 +1,16 @@
 import java.awt.desktop.SystemEventListener;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DecimalFormat;
 
 public class Scheduler extends Thread{
     private Process process;
     private final ReadyQueue<Process> readyQueue;
-    private int i =0;
+    private static DecimalFormat df2 = new DecimalFormat("#.###");
+    private FileWriter fileWriter = new FileWriter("output.txt", true);
 
-    public Scheduler(Process process, ReadyQueue<Process> readyQueue){
+
+    public Scheduler(Process process, ReadyQueue<Process> readyQueue) throws IOException {
         this.process = process;
         this.readyQueue = readyQueue;
     }
@@ -16,15 +21,15 @@ public class Scheduler extends Thread{
         while(!this.process.isDone()) {
 
             try {
-                compute();
+                compute(fileWriter);
 
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public void compute() throws InterruptedException {
+    public void compute(FileWriter fileWriter) throws InterruptedException, IOException {
         synchronized (readyQueue) {
                 if (readyQueue.getTotalTime() >= this.process.getArrivalTime() && !readyQueue.isInQueue(this.process.getId())) {
                     readyQueue.insert(this.process);
@@ -33,21 +38,26 @@ public class Scheduler extends Thread{
                     readyQueue.delMin();
                     this.process.allDone();
                     readyQueue.processDone();
-                    System.out.println("Time " + readyQueue.getTotalTime() + ", " + Thread.currentThread().getName() + ", Finished");
+                    System.out.println("Time " + df2.format(readyQueue.getTotalTime()) + ", " + Thread.currentThread().getName() + ", Finished");
+                    fileWriter.write("\nTime " + df2.format(readyQueue.getTotalTime()) + ", " + Thread.currentThread().getName() + ", Finished");
                 }
                 if (this.readyQueue.isInQueue(this.process.getId()) && readyQueue.myTurn(this.process)) {
                     if (this.process.isNewbie()) {
-                        System.out.println("Time " + readyQueue.getTotalTime() + ", " + Thread.currentThread().getName() + ", Started");
+                        System.out.println("Time " + df2.format(readyQueue.getTotalTime()) + ", " + Thread.currentThread().getName() + ", Started");
+                        fileWriter.write("\nTime " + df2.format(readyQueue.getTotalTime()) + ", " + Thread.currentThread().getName() + ", Started");
                         readyQueue.setTotalTime(this.process.quantum());
-                        System.out.println("Time " + readyQueue.getTotalTime() + ", " + Thread.currentThread().getName() + ", Paused");
+                        System.out.println("Time " + df2.format(readyQueue.getTotalTime()) + ", " + Thread.currentThread().getName() + ", Paused");
+                        fileWriter.write("\nTime " + df2.format(readyQueue.getTotalTime()) + ", " + Thread.currentThread().getName() + ", Paused");
                         readyQueue.notifyAll();
                         readyQueue.wait();
                     } else {
                         readyQueue.delMin();
-                        System.out.println("Time " + readyQueue.getTotalTime() + ", " + Thread.currentThread().getName() + ", Resumed");
+                        System.out.println("Time " + df2.format(readyQueue.getTotalTime()) + ", " + Thread.currentThread().getName() + ", Resumed");
+                        fileWriter.write("\nTime " + df2.format(readyQueue.getTotalTime()) + ", " + Thread.currentThread().getName() + ", Resumed");
                         readyQueue.setTotalTime(this.process.quantum());
                         readyQueue.insert(this.process);
-                        System.out.println("Time " + readyQueue.getTotalTime() + ", " + Thread.currentThread().getName() + ", Paused");
+                        System.out.println("Time " + df2.format(readyQueue.getTotalTime()) + ", " + Thread.currentThread().getName() + ", Paused");
+                        fileWriter.write("\nTime " + df2.format(readyQueue.getTotalTime()) + ", " + Thread.currentThread().getName() + ", Paused");
                         readyQueue.notifyAll();
                         if(readyQueue.getProCount() > 1) readyQueue.wait();
                     }
