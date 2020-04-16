@@ -10,7 +10,7 @@ public class VM extends Thread {
     private int frameCap;
     private boolean notDone;
     private boolean firstFill;
-    private int[] results = new int[3];
+    private int[] results = new int[2];
     private Filer vmFiler = new Filer("vm.txt",0);
     private int clock;
     private int lastClock;
@@ -76,7 +76,7 @@ public class VM extends Thread {
         results[0] = -2;
         results[1] = -2;
         commandCount++;
-        execTime = timeStamp(clock,execTime);
+        execTime = ticTock(clock,execTime);
         clock = execTime;
         passTime();
         switch(c){
@@ -129,9 +129,7 @@ public class VM extends Thread {
         if(frameCount < frameCap && firstFill) {
             mainMem[frameCount] = new Frames(varID, val, t);
             frameCount++;
-            if (frameCount == frameCap && firstFill) {
-                firstFill = false;
-            }
+            fillCheck();
         }else if (frameCount < frameCap){
             mainMem[emptyFrame()].variableID = varID;
             mainMem[emptyFrame()].value = val;
@@ -147,12 +145,10 @@ public class VM extends Thread {
                 mainMem[old].lastAccess = t;
                 results[0] = temporary;
                 results[1] = -1;
-                results[2] = t;
                 return results;
             }else{
                 results[0] = mainMem[old].variableID;
                 results[1] = 0;
-                results[2] = t;
                 mainMem[old].variableID = temp.get(0);
                 mainMem[old].value = temp.get(1);
                 mainMem[old].lastAccess = t;
@@ -162,7 +158,6 @@ public class VM extends Thread {
 
         results[0]=-1;
         results[1]=-1;
-        results[2]= t;
         return results;
     }
 
@@ -178,7 +173,6 @@ public class VM extends Thread {
         }
 
         results[1]=-1;
-        results[2]= t;
         return results;
     }
 
@@ -189,7 +183,6 @@ public class VM extends Thread {
             mainMem[a].lastAccess = t;
             results[0] = -2;
             results[1] = mainMem[a].value;
-            results[2] = t;
         }else{
             ArrayList<Integer> temp = vmFiler.vmWR(mainMem[oldest()].variableID,mainMem[oldest()].value,mainMem[oldest()].lastAccess,'l',varID);
             if(temp.get(0) == -1){
@@ -204,7 +197,6 @@ public class VM extends Thread {
                 results[0] = temp.get(0);
                 results[1] = temp.get(1);
             }
-            results[2] = t;
         }
         return results;
     }
@@ -228,6 +220,12 @@ public class VM extends Thread {
         return -1;
     }
 
+    public void fillCheck(){
+        if(firstFill && frameCount==frameCap){
+            firstFill =false;
+        }
+    }
+
     public int oldest(){
         int id = 0;
 
@@ -239,14 +237,8 @@ public class VM extends Thread {
         return id;
     }
 
-    private synchronized void passTime(){
-        if(bumps%2 == 0){
-            clock = lastClock + bump;
-            lastClock = clock;
-        }
-    }
 
-    private synchronized int chronological(){
+    public synchronized int chronological(){
         if(execTime > clock){
             return execTime;
         }
@@ -254,18 +246,30 @@ public class VM extends Thread {
     }
 
     public synchronized int readClock(){
+        if(execTime < clock){
+            execTime = clock;
+        }
      return clock;
     }
 
-    private synchronized int timeStamp(int t, int x){
+    private synchronized int ticTock(int t, int x){
         Random rand = new Random();
         bumps++;
-        if(x ==0){ return t + x + rand.nextInt(1000);}
+        if(x == 0){ return t + x + rand.nextInt(500);}
         else {
             x -= t;
-            return t + x + rand.nextInt(1000-x);
+            return t + x + rand.nextInt(500-x);
         }
     }
+
+
+    private synchronized void passTime(){
+        if(bumps%2 == 0){
+            clock = lastClock + bump;
+            lastClock = clock;
+        }
+    }
+
     public void checkCommand(int c){
         commandCount = c;
     }

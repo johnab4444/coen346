@@ -143,69 +143,6 @@ public class Filer {
         return temp;
     }
 
-    public synchronized void fileWriter(String text){
-
-    }
-
-    /* frames = 2
-    var1 5 1300
-    var2 7 2000
-
-    store var3 8 3000
-
-    vmWR(var1, 5, 1300)
-    vm.txt add (var1, 5, 1300)
-    result:
-    var3 8 3000
-    var2 7 2000
-
-    vm.txt:
-    1 5 1300
-
-    store var4 17 3500
-    vm.txt.add(var2 7 2000)
-
-    result:
-    var3 8 3000
-    var4 17 3500
-
-    vm.txt:
-    1 5 1300
-    2 7 2000
-
-    store var1 23 4000
-
-    vm.txt (swap var3 var1)
-
-    result:
-    var1 23 4000
-    var4 17 3500
-
-    vm.txt:
-    3 8 3000
-    2 7 2000
-
-    free var4
-    result
-    var1 23 4000
-    ________
-
-    vm.txt
-    3 8 3000
-    2 7 2000
-
-    store(lookup) var3 99 5000
-
-    result
-    var1 23 4000
-    var3 99 5000 (var3 8 5000)
-
-    vm.txt:
-    2 7 2000
-     */
-
-
-
     private void vmSorter(String[] vm){
         int pos = 0;
         int linecount = vm.length/3;
@@ -220,10 +157,6 @@ public class Filer {
 
     }
 
-    /* vm.txt
-    1 4 2000
-    3 5 6000
-     */
 
     public String readFile() {
         try {

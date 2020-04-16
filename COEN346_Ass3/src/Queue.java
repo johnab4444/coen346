@@ -5,6 +5,7 @@ public class Queue {
     private Process[] queue;
     private int size;
 
+    //constructor
     public Queue(int s, ArrayList<Process> proList){
         size = s;
         queue = new Process[s];
@@ -12,6 +13,7 @@ public class Queue {
         firstSort();
     }
 
+    //function used to initially sort the list of processes
     public synchronized void firstSort(){
         Process temp;
         for(int j = 0; j<queue.length;j++){
@@ -35,6 +37,7 @@ public class Queue {
         }
     }
 
+    //verify if the process is at the front of the queue
     public synchronized boolean frontRunner(int id){
         if(queue[0].getId() == id || queue[1].getId() == id){
             return true;
@@ -42,6 +45,7 @@ public class Queue {
         else return false;
     }
 
+    // verify if a process is ready to run
     public synchronized boolean readyPro(Process p, int t){
         for(int i = 0; i<pros.proSize(); i++){
             if(p.getId() == pros.getPro(i).getId() && pros.readyCheck(p,t)){
@@ -51,13 +55,21 @@ public class Queue {
         return false;
     }
 
+    //method to verify if other processes are ready and waiting to execute (pre-emptive scheduling)
     public synchronized boolean othersWaiting(Process p, int t){
-        if((queue[0].getId() != p.getId() && readyPro(queue[0],t)) || (queue[1].getId() != p.getId() && readyPro(queue[1],t))){
-            return true;
+        if(queue.length < 2){
+            if((queue[0].getId() != p.getId() && readyPro(queue[0],t))){
+                return true;
+            }
+        }else {
+            if((queue[0].getId() != p.getId() && readyPro(queue[0],t)) || (queue[1].getId() != p.getId() && readyPro(queue[1],t))){
+                return true;
+            }
         }
         return false;
     }
 
+    //take the process that is being allowed to run and place it at the end of the queue
     public  synchronized void deQueue(Process p){
         if(p.getId() == queue[0].getId()){
             for(int i =0; i<(queue.length-1);i++){
@@ -71,6 +83,8 @@ public class Queue {
             queue[queue.length-1] = p;
         }else return;
     }
+
+    //re-sort the array if processes at the head of the queue are not ready to run
     public synchronized void reSort(int t){
         Process[] newQueue = new Process[queue.length];
         Process temp;
@@ -102,12 +116,15 @@ public class Queue {
                 }
             }
         }
+        //pass newly organized queue to the queue variable
         queue = newQueue;
+        //re-insert processes into the arraylist
         for(int i = 0; i< queue.length; i++){
             pros.addPro(queue[i]);
         }
     }
 
+    //function to check if a process is in the queue
     private boolean notInArray(Process p, Process[] q){
         for(int i =0; i<q.length; i++){
             if(q[i]==p){
@@ -117,6 +134,7 @@ public class Queue {
         return true;
     }
 
+    //sorting algorithm used when a process has terminated
     private synchronized void freshSort(){
         Process[] newQueue = new Process[pros.proSize()];
         for(int i = 0; i <queue.length; i++){
@@ -128,6 +146,7 @@ public class Queue {
         queue = newQueue;
     }
 
+    //function to delete a process from the arraylist once it has terminated
     public synchronized void yeetProcess(Process p){
         pros.remove(p.getId());
         freshSort();

@@ -10,11 +10,11 @@ public class Process {
     private int quantum = 3000;
     private boolean done;
     private int id;
+    private int lastTimeStamp;
     private ArrayList<Process> processes = new ArrayList<Process>();
-    private ArrayList<Process> processQueue = new ArrayList<Process>();
 
     //constructors
-
+    //individual Process initialization constructor
     public Process(int arrivalTime, int burstTime, int id) {
         this.arrivalTime = arrivalTime*1000;
         this.burstTime = burstTime*1000;
@@ -24,9 +24,17 @@ public class Process {
         this.cpuTime =0;
 
     }
-
+    //copy constructor for passing arraylist
     public Process(ArrayList<Process> proList){
         processes = proList;
+    }
+
+    public void punchClock(int t){
+        lastTimeStamp = t;
+    }
+
+    public int timeStamp(){
+        return lastTimeStamp;
     }
 
     public Process(Process pro){
@@ -38,6 +46,7 @@ public class Process {
         this.newbie = pro.newbie;
     }
 
+    //constructor for initial input list of processes
     public Process(String[] data){
         processCount = Integer.parseInt(data[0]);
         int max = data.length;
@@ -48,52 +57,49 @@ public class Process {
         }while(count<max);
     }
 
+    //returns a process
     public Process getPro(int i){
         return processes.get(i);
     }
 
-
+    //returns the amount original amount of processes
     public Process(int p){
         processCount = p;
     }
 
+    //checks if the process has finished executing
     public int checkTime(int t){
         if((t-startTime) >= burstTime){
             done = true;
-            return -1;
+            return -2;
         }else if((t-startTime) >= quantum){
             return 1;
         }
         return -1;
     }
 
+    //check if process has had a turn with the CPU yet
     public boolean isNewbie(){
         return newbie;
     }
 
+    //declares start time of process and changes status to not 'New'
     public void notANewbie(int t){
         startTime = t;
         newbie = false;
     }
 
-    public synchronized void deQueue(int p){
-        if(p == processQueue.get(0).id) {
-            Process temp = new Process(processQueue.get(0).arrivalTime, processQueue.get(0).burstTime, processQueue.get(0).id);
-            processQueue.remove(0);
-        }else if(p == processQueue.get(1).id){
-            Process temp = new Process(processQueue.get(1).arrivalTime, processQueue.get(1).burstTime, processQueue.get(1).id);
-            processQueue.remove(1);
-        }
-    }
-
+    //adds a process to the arrayList
     public void addPro(Process p){
         processes.add(p);
     }
 
+    //returns number of processes in ArrayList
     public int proSize(){
         return processes.size();
     }
 
+    //verify if the process is ready to execute
     public boolean readyCheck(Process p, int t){
         if(p.arrivalTime <= t && p.cpuTime < quantum){
             return true;
@@ -101,20 +107,13 @@ public class Process {
         return false;
     }
 
-
-    public boolean emptyQueue(){
-        return processQueue.size() == 0;
-    }
-
-
+    //verify if the process is done
     public boolean isDone(){
         return done;
     }
 
-    public synchronized void enQueue(Process temp){
-        processQueue.add(temp);
-    }
 
+    //verifies if the process is in the arrayList
     public boolean isInList(Process p){
         for(int i= 0; i<processes.size(); i++) {
             if (p.id == processes.get(i).id) {
@@ -128,9 +127,7 @@ public class Process {
     public int getProcessCount() {
         return processCount;
     }
-    public int getBurstTime(){
-        return burstTime;
-    }
+
 
     //get the id of a process
     public int getId(){
@@ -146,6 +143,7 @@ public class Process {
         return processes;
     }
 
+    //removes process from the arrayList
     public void remove(int id){
         for(int i = 0; i< processes.size(); i++){
             if(id == processes.get(i).id){

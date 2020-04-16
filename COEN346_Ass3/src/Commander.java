@@ -20,9 +20,6 @@ public class Commander {
     }
 
 
-    public boolean isEmpty(){
-        return commandList.size() == 0;
-    }
 
     public int seeCommandCount(){
         return commandCount;
@@ -54,9 +51,6 @@ public class Commander {
 
     }
 
-    public ArrayList<Commander> getCommandList() {
-        return commandList;
-    }
 
     public Character getCommand() {
         return command;
