@@ -12,16 +12,18 @@ public class Scheduler extends Thread {
     private VM vmm;
     private int[] result = new int[2];
     private Thread vmThread;
+    private Queue readyQueue;
 
     private boolean runVM = true;
     private Semaphore runningPros = new Semaphore(2, true);
     private Semaphore commandKey = new Semaphore(1,true);
 
-    public Scheduler (Commander com, Process pro, VM vm, FileWriter fileWriter){
+    public Scheduler (Commander com, Process pro, VM vm, FileWriter fileWriter, Queue readyQ){
         this.commandList = com;
         this.process = pro;
         this.vmm = vm;
         this.fileWriter = fileWriter;
+        this.readyQueue = readyQ;
     }
 
     private synchronized void writer(String text) throws IOException {
@@ -56,12 +58,12 @@ public class Scheduler extends Thread {
     public void compute() throws IOException, InterruptedException {
         synchronized (vmm){
 
-            if(process.getArrivalTime() <= vmm.readClock() && process.notInQueue(process.getId()) && !process.isDone()){
+            /*if(process.getArrivalTime() <= vmm.readClock() && process.notInQueue(process.getId()) && !process.isDone()){
                 process.enQueue(process);
-            }
-            if(!process.emptyQueue() && process.frontOfLine(process.getId())){
+            }*/
+            if(readyQueue.readyPro(process, vmm.readClock()) && readyQueue.frontRunner(process.getId())){
                 runningPros.acquire();
-                process.deQueue(process.getId());
+                readyQueue.deQueue(process);
                 if (process.isNewbie()) {
                     System.out.println("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ",Started.");
                     writer("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ",Started." + "\n");
@@ -81,18 +83,22 @@ public class Scheduler extends Thread {
 
                 if(process.isDone()){
                     vmm.yeetProcess();
+                    readyQueue.yeetProcess(process);
                     System.out.println("Clock: " + vmm.readClock() + currentThread().getName() + ": Finished.");
                     writer("Clock: " + vmm.readClock() + currentThread().getName() + ": Finished."+ "\n");
-                }else if(p>0 || !process.emptyQueue()){
+                    runningPros.release();
+                    vmm.notifyAll();
+                }else if(p>0 || readyQueue.othersWaiting(process, vmm.readClock())){
                     System.out.println("Clock: " + vmm.readClock() + currentThread().getName() + ": Paused");
                     writer("Clock: " + vmm.readClock() + currentThread().getName() + ": Paused"+ "\n");
-                    process.enQueue(process);
+                    runningPros.release();
+                    vmm.notifyAll();
+                    vmm.wait();
                 } else{
-                    process.enQueue(process);
+                    readyQueue.reSort(vmm.readClock());
                 }
-                runningPros.release();
-                vmm.notifyAll();
-                vmm.wait();
+
+
             } else{
                 vmm.notifyAll();
             }

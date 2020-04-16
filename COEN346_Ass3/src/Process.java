@@ -19,21 +19,39 @@ public class Process {
         this.arrivalTime = arrivalTime*1000;
         this.burstTime = burstTime*1000;
         this.id = id;
+        this.newbie = true;
+        this.done = false;
+        this.cpuTime =0;
+
+    }
+
+    public Process(ArrayList<Process> proList){
+        processes = proList;
+    }
+
+    public Process(Process pro){
+        this.arrivalTime = pro.arrivalTime;
+        this.burstTime = pro.burstTime;
+        this.id = pro.id;
+        this.cpuTime = pro.cpuTime;
+        this.startTime = pro.startTime;
+        this.newbie = pro.newbie;
     }
 
     public Process(String[] data){
         processCount = Integer.parseInt(data[0]);
         int max = data.length;
-        int j = 0;
         int i = 1;
         int count = 1;
         do{
             processes.add(new Process(Integer.parseInt(data[count++]),Integer.parseInt(data[count++]), i++));
-            processes.get(j).newbie = true;
-            processes.get(j).done = false;
-            processes.get(j++).cpuTime = 0;
         }while(count<max);
     }
+
+    public Process getPro(int i){
+        return processes.get(i);
+    }
+
 
     public Process(int p){
         processCount = p;
@@ -68,33 +86,26 @@ public class Process {
         }
     }
 
-    public boolean progress(int t){
-        if(t-arrivalTime >0){return true;}
-        else{return false;}
+    public void addPro(Process p){
+        processes.add(p);
     }
 
-    public boolean emptyQueue(){
-        return processQueue.size() == 0;
+    public int proSize(){
+        return processes.size();
     }
 
-    public synchronized boolean frontOfLine(int p){
-        if(emptyQueue()){ return false;}
-        else if(processQueue.get(0).id == p || processQueue.get(1).id == p){
+    public boolean readyCheck(Process p, int t){
+        if(p.arrivalTime <= t && p.cpuTime < quantum){
             return true;
         }
         return false;
     }
 
-    public synchronized boolean canStillRun(){
-        if(cpuTime < quantum && burstTime > 0){return true;}
-        else if(cpuTime >= quantum && burstTime > 0){
-            cpuTime = 0;
-            return false;
-        }else {
-            done = true;
-            return false;
-        }
+
+    public boolean emptyQueue(){
+        return processQueue.size() == 0;
     }
+
 
     public boolean isDone(){
         return done;
@@ -104,14 +115,13 @@ public class Process {
         processQueue.add(temp);
     }
 
-    public boolean notInQueue(int id){
-        if(emptyQueue()){return true;}
-        else{
-            for(int i =0; i< processQueue.size(); i++){
-                if(processQueue.get(i).id == id){return false;}
+    public boolean isInList(Process p){
+        for(int i= 0; i<processes.size(); i++) {
+            if (p.id == processes.get(i).id) {
+                return true;
             }
-            return true;
         }
+        return false;
     }
 
 
@@ -128,11 +138,20 @@ public class Process {
     }
 
     //get the processes arrival time
-    public double getArrivalTime(){
+    public int getArrivalTime(){
         return this.arrivalTime;
     }
 
     public ArrayList<Process> getProcesses() {
         return processes;
+    }
+
+    public void remove(int id){
+        for(int i = 0; i< processes.size(); i++){
+            if(id == processes.get(i).id){
+                processes.remove(i);
+                return;
+            }
+        }
     }
 }

@@ -14,6 +14,7 @@ public class Driver {
         ArrayList<Integer> vars = new ArrayList<Integer>();
         ArrayList<Integer> vals = new ArrayList<Integer>();
         Process processes;
+        Queue readyQueue;
         FileWriter fileWriter = new FileWriter("output.txt", false);
 
 
@@ -30,13 +31,14 @@ public class Driver {
         vars = filerC.getVars();
         processes = new Process(processInput);
         commanders = new Commander(orders, vars, vals);
+        readyQueue = new Queue(processes.getProcessCount(), processes.getProcesses());
 
         VM vm = new VM(Integer.parseInt(memconfigInput[0]), processes.getProcessCount(), commanders.seeCommandCount());
 
         Thread[] threads = new Thread[processes.getProcessCount()];
         //create each thread and insert into the array
         for (int i = 0; i < threads.length; i++) {
-            threads[i] = new Thread(new Scheduler(commanders, processes.getProcesses().get(i), vm, fileWriter), "Process " + processes.getProcesses()
+            threads[i] = new Thread(new Scheduler(commanders, processes.getProcesses().get(i), vm, fileWriter, readyQueue), "Process " + processes.getProcesses()
                     .get(i).getId());
         }
 

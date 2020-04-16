@@ -1,16 +1,22 @@
 Clock: 1000, Process 2,Started.
-Clock:1556, Process 2,Store: Variable 1, Value: 5
-Clock:2497, Process 2,Store: Variable 2, Value: 3
+Clock:1709, Process 2,Store: Variable 1, Value: 5
+Clock:1786, Process 2,Store: Variable 2, Value: 3
+Clock: 2000Process 2: Paused
 Clock: 2000, Process 3,Started.
-Clock:2507, Process 3,Store: Variable 3, Value: 7
-Clock: 2507, Memory Manager, SWAP: Variable3 with Variable 1
-Clock:2687, Process 2,Lookup: Variable 3, Value: 7
-Clock: 3000Process 2: Finished.
-Clock: 3000, Process 1,Started.
-Clock:3594, Process 1,Lookup: Variable 2, Value: 3
-Clock:4229, Process 3,Release: Variable1
-Clock: 4000Process 3: Finished.
+Clock:2003, Process 3,Store: Variable 3, Value: 7
+Clock: 2003, Memory Manager, SWAP: Variable3 with Variable 1
+Clock: 2003Process 3: Paused
+Clock: 2003, Process 1,Started.
+Clock:2238, Process 1,Lookup: Variable 3, Value: 7
+Clock: 3000Process 1: Paused
+Clock: 3000, Process 3,Resumed
+Clock:2820, Process 3,Lookup: Variable 2, Value: 3
+Clock: 2820Process 3: Paused
+Clock:3303, Process 2,Release: Variable1
+Clock: 4000Process 2: Finished.
 Clock: 4000, Process 1,Resumed
-Clock:4704, Process 1,Store: Variable 1, Value: 8
-Clock: 4704, Memory Manager, SWAP: Variable1 with Variable 3
-Clock: 4704Process 1: Finished.
+Clock:4942, Process 1,Store: Variable 1, Value: 8
+Clock: 4942, Memory Manager, SWAP: Variable1 with Variable 3
+Clock: 4942Process 1: Finished.
+Clock:5016, Process 3,Lookup: Variable 1, Value: 8
+Clock: 5000Process 3: Finished.
