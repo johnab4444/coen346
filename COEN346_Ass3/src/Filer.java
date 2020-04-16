@@ -68,16 +68,16 @@ public class Filer {
                             for(int j=0; j<vars.size(); j++){
                                 fileWriter.write(vars.get(j) + ' ' + vals.get(j) + ' ' + accesst.get(j) + '\n');
                             }
-                            fileWriter.flush();
-                            fileWriter.close();
+                            /*fileWriter.flush();
+                            fileWriter.close();*/
                             return temp;
                         }
                     }
                     fileWriter = new FileWriter("vm.txt", true);
                 }
                 fileWriter.write(varID + ' ' + val + ' ' + t + '\n');
-                fileWriter.flush();
-                fileWriter.close();
+                /*fileWriter.flush();
+                fileWriter.close();*/
                 vmSize++;
                 return null;
 
@@ -94,8 +94,8 @@ public class Filer {
                             fileWriter.write(vars.get(i) + ' ' + vals.get(i) + ' ' + accesst.get(i) + '\n');
                         }
                     }
-                    fileWriter.flush();
-                    fileWriter.close();
+                    /*fileWriter.flush();
+                    fileWriter.close();*/
                 }
                 return null;
 
@@ -124,8 +124,8 @@ public class Filer {
                     for(int j=0; j<vars.size(); j++){
                         fileWriter.write(vars.get(j) + ' ' + vals.get(j) + ' ' + accesst.get(j) + '\n');
                     }
-                    fileWriter.flush();
-                    fileWriter.close();
+                    /*fileWriter.flush();
+                    fileWriter.close();*/
                     return temp;
                 }else{
                     return notFound();

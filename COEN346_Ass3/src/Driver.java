@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Driver {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         Commander commanders;
         Filer filerC = new Filer("commands.txt");
         Filer filerP = new Filer("processes.txt");
@@ -20,16 +20,36 @@ public class Driver {
         String[] processInput = filerP.readFile().split("\\s+");
         String[] memconfigInput = filerM.readFile().split("\\s+");
 
-        int[] memSize = new int[Integer.parseInt(memconfigInput[0])];
-        System.out.println(memSize.length);
+
 
         filerC.commandOrganizer(commandInput);
         orders = filerC.getOrders();
         vals = filerC.getVals();
         vars = filerC.getVars();
-        commanders = new Commander(orders, vars, vals);
         processes = new Process(processInput);
+        commanders = new Commander(orders, vars, vals, processes.getProcessCount());
+
+        System.out.println(processes.getProcessCount());
+        VM vm = new VM(Integer.parseInt(memconfigInput[0]));
+
+        Thread[] threads = new Thread[processes.getProcessCount()];
+        //create each thread and insert into the array
+        for(int i = 0;i<threads.length;i++){
+            threads[i] = new Thread(new Scheduler(commanders, processes.getProcesses().get(i), vm), "Process " + processes.getProcesses()
+                    .get(i).getId());
+        }
+
+        for(int i = 0;i<threads.length;i++){
+            threads[i].start();
+        }
+
+        for(int i = 0;i<threads.length;i++){
+            threads[i].join();
+        }
+
+        System.out.println(processes.getProcessCount());
         System.out.println(commanders.getCommandList().get(4).getCommand());
+        System.out.println(commanders.getCommandList().get(4).getValue());
         System.out.println(processes.getProcesses().get(0).getArrivalTime());
 
     }
