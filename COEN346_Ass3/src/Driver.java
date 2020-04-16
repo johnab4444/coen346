@@ -14,6 +14,9 @@ public class Driver {
         ArrayList<Integer> vars = new ArrayList<Integer>();
         ArrayList<Integer> vals = new ArrayList<Integer>();
         Process processes;
+        FileWriter fileWriter = new FileWriter("output.txt", false);
+
+
 
 
         String[] commandInput = filerC.readFile().split("\\s+");
@@ -21,36 +24,32 @@ public class Driver {
         String[] memconfigInput = filerM.readFile().split("\\s+");
 
 
-
         filerC.commandOrganizer(commandInput);
         orders = filerC.getOrders();
         vals = filerC.getVals();
         vars = filerC.getVars();
         processes = new Process(processInput);
-        commanders = new Commander(orders, vars, vals, processes.getProcessCount());
+        commanders = new Commander(orders, vars, vals);
 
-        System.out.println(processes.getProcessCount());
-        VM vm = new VM(Integer.parseInt(memconfigInput[0]));
+        VM vm = new VM(Integer.parseInt(memconfigInput[0]), processes.getProcessCount(), commanders.seeCommandCount());
 
         Thread[] threads = new Thread[processes.getProcessCount()];
         //create each thread and insert into the array
-        for(int i = 0;i<threads.length;i++){
-            threads[i] = new Thread(new Scheduler(commanders, processes.getProcesses().get(i), vm), "Process " + processes.getProcesses()
+        for (int i = 0; i < threads.length; i++) {
+            threads[i] = new Thread(new Scheduler(commanders, processes.getProcesses().get(i), vm, fileWriter), "Process " + processes.getProcesses()
                     .get(i).getId());
         }
 
-        for(int i = 0;i<threads.length;i++){
+        for (int i = 0; i < threads.length; i++) {
             threads[i].start();
         }
 
-        for(int i = 0;i<threads.length;i++){
+        for (int i = 0; i < threads.length; i++) {
             threads[i].join();
         }
 
-        System.out.println(processes.getProcessCount());
-        System.out.println(commanders.getCommandList().get(4).getCommand());
-        System.out.println(commanders.getCommandList().get(4).getValue());
-        System.out.println(processes.getProcesses().get(0).getArrivalTime());
-
+        fileWriter.flush();
+        fileWriter.close();
     }
+
 }

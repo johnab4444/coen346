@@ -41,10 +41,10 @@ public class Filer {
         }while(check > pos);
     }
 
-    public ArrayList<Integer> vmWR(Integer varID, Integer val, Integer t, char com, Integer returnID) throws IOException {
+    public synchronized ArrayList<Integer> vmWR(Integer varID, Integer val, Integer t, char com, Integer returnID) throws IOException {
         switch(com){
             case 's':
-                if(vmSize ==0){
+                if(vmSize == 0){
                     fileWriter = new FileWriter("vm.txt", false);
                 }else {
                     String[] dataS = readFile().split("\\s+");
@@ -66,7 +66,7 @@ public class Filer {
                             }
                             fileWriter = new FileWriter("vm.txt", false);
                             for(int j=0; j<vars.size(); j++){
-                                fileWriter.write(vars.get(j) + ' ' + vals.get(j) + ' ' + accesst.get(j) + '\n');
+                                fileWriter.write(vars.get(j) +  " " + vals.get(j) + " " + accesst.get(j) + '\n');
                             }
                             /*fileWriter.flush();
                             fileWriter.close();*/
@@ -75,9 +75,9 @@ public class Filer {
                     }
                     fileWriter = new FileWriter("vm.txt", true);
                 }
-                fileWriter.write(varID + ' ' + val + ' ' + t + '\n');
-                /*fileWriter.flush();
-                fileWriter.close();*/
+                fileWriter.write(varID + " " + val + " " + t + '\n');
+                fileWriter.flush();
+                fileWriter.close();
                 vmSize++;
                 return null;
 
@@ -91,13 +91,16 @@ public class Filer {
                     for (int i =0; i<vars.size(); i++){
                         if(varID == vars.get(i)){
                         }else{
-                            fileWriter.write(vars.get(i) + ' ' + vals.get(i) + ' ' + accesst.get(i) + '\n');
+                            fileWriter.write(vars.get(i) + " " + vals.get(i) + " " + accesst.get(i) + '\n');
                         }
                     }
-                    /*fileWriter.flush();
-                    fileWriter.close();*/
+                    fileWriter.flush();
+                    fileWriter.close();
+                    vmSize--;
+                    ArrayList<Integer> temp = new ArrayList<Integer>();
+                    temp.add(1);
+                    return temp;
                 }
-                return null;
 
             case 'l':
                 boolean found = false;
@@ -122,10 +125,10 @@ public class Filer {
                 if(found){
                     fileWriter = new FileWriter("vm.txt", false);
                     for(int j=0; j<vars.size(); j++){
-                        fileWriter.write(vars.get(j) + ' ' + vals.get(j) + ' ' + accesst.get(j) + '\n');
+                        fileWriter.write(vars.get(j) + " " + vals.get(j) + " " + accesst.get(j) + '\n');
                     }
-                    /*fileWriter.flush();
-                    fileWriter.close();*/
+                    fileWriter.flush();
+                    fileWriter.close();
                     return temp;
                 }else{
                     return notFound();
@@ -140,7 +143,7 @@ public class Filer {
         return temp;
     }
 
-    public void fileWriter(String[] data){
+    public synchronized void fileWriter(String text){
 
     }
 

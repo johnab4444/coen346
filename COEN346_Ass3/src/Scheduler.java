@@ -10,19 +10,22 @@ public class Scheduler extends Thread {
     private Process process;
     private FileWriter fileWriter;
     private VM vmm;
-    private Integer[] result = new Integer[2];
-    private int bump = 1000;
-    private int bumps =0;
-    private int execTime =0;
-    private int clock;
+    private int[] result = new int[2];
+    private Thread vmThread;
+
     private boolean runVM = true;
     private Semaphore runningPros = new Semaphore(2, true);
+    private Semaphore commandKey = new Semaphore(1,true);
 
-    public Scheduler (Commander com, Process pro, VM vm){
+    public Scheduler (Commander com, Process pro, VM vm, FileWriter fileWriter){
         this.commandList = com;
         this.process = pro;
         this.vmm = vm;
-        clock =0;
+        this.fileWriter = fileWriter;
+    }
+
+    private synchronized void writer(String text) throws IOException {
+        this.fileWriter.write(text);
     }
 
 
@@ -30,102 +33,106 @@ public class Scheduler extends Thread {
     @Override
     public void run() {
 
-        while(commandList.showCount() > 0 && !commandList.isEmpty()){
+        while(vmm.notFinished()){
             if(runVM){
-                try {
-                    Thread vmThread = new Thread(new VM(vmm.getFrameCount()));
-                    System.out.println("memcount " + vmm.getMainMem().size());
-                    vmThread.start();
-                    //vmThread.join();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                vmThread = new Thread(vmm);
+                vmThread.start();
                 runVM = false;
             }
             try {
-                execTime = 0;
                 compute();
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
         vmm.allDone();
+        try {
+            vmThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void compute() throws IOException, InterruptedException {
         synchronized (vmm){
 
-            if(process.getArrivalTime() <= clock && process.notInQueue(process.getId())){
+            if(process.getArrivalTime() <= vmm.readClock() && process.notInQueue(process.getId()) && !process.isDone()){
                 process.enQueue(process);
             }
-            if(!process.emptyQueue() && process.getId() == process.firstInLine()){
-                do {
-                    runningPros.acquire();
-                    process.deQueue();
-                    if (process.isNewbie()) {
-                        System.out.println("Clock: " + clock + ", " + currentThread().getName() + ",Started.");
-                        //TODO write to output file
-                        process.notANewbie();
-                    } else {
-                        System.out.println("Clock: " + clock + ", " + currentThread().getName() + ",Resumed");
-                        //TODO write to output file
-                    }
-                    doCommand = commandList.nextCommand();
-                    execTime = timeStamp(clock, execTime);
-                    result = vmm.executeC(doCommand.getCommand(), doCommand.getVar(), doCommand.getValue(), execTime);
-                    printOut(execTime, result, doCommand, currentThread().getName());
-                    vmm.sleep(100);
-                    process.runOut(clock);
-                    passTime();
-                }while(process.canStillRun(clock));
+            if(!process.emptyQueue() && process.frontOfLine(process.getId())){
+                runningPros.acquire();
+                process.deQueue(process.getId());
+                if (process.isNewbie()) {
+                    System.out.println("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ",Started.");
+                    writer("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ",Started." + "\n");
+                    process.notANewbie(vmm.readClock());
+                } else if(vmm.readClock()%1000 == 0){
+                    System.out.println("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ",Resumed");
+                    writer("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ",Resumed"+ "\n");
+                }
+                commandKey.acquire();
+                doCommand = commandList.nextCommand();
+                result = vmm.executeC(doCommand.getCommand(), doCommand.getVar(), doCommand.getValue());
+                printOut(result, doCommand, currentThread().getName());
+                vmm.checkCommand(commandList.seeCommandCount());
+                commandKey.release();
+
+                int p = process.checkTime(vmm.readClock());
+
                 if(process.isDone()){
-                    commandList.yeetProcess();
-                    System.out.println("Clock: " + clock + currentThread().getName() + ": Finished.");
-                }else{
-                    System.out.println("Clock: " + clock + currentThread().getName() + ": Paused");
+                    vmm.yeetProcess();
+                    System.out.println("Clock: " + vmm.readClock() + currentThread().getName() + ": Finished.");
+                    writer("Clock: " + vmm.readClock() + currentThread().getName() + ": Finished."+ "\n");
+                }else if(p>0 || !process.emptyQueue()){
+                    System.out.println("Clock: " + vmm.readClock() + currentThread().getName() + ": Paused");
+                    writer("Clock: " + vmm.readClock() + currentThread().getName() + ": Paused"+ "\n");
+                    process.enQueue(process);
+                } else{
+                    process.enQueue(process);
                 }
                 runningPros.release();
                 vmm.notifyAll();
                 vmm.wait();
             } else{
-                passTime();
                 vmm.notifyAll();
             }
         }
     }
 
-    private synchronized void printOut(int t, Integer[] r, Commander c, String title){
+    private synchronized void printOut(int[] r, Commander c, String title) throws IOException {
         switch (c.getCommand()){
             case 's':
-                System.out.println("Clock:" + t + ", " + title + ",Store: Variable " + c.getVar() + ", Value: " + c.getValue());
+                System.out.println("Clock:" + r[2] + ", " + title + ",Store: Variable " + c.getVar() + ", Value: " + c.getValue());
+                writer("Clock:" + r[2] + ", " + title + ",Store: Variable " + c.getVar() + ", Value: " + c.getValue()+ "\n");
                 if(r[0] >= 0){
-                    System.out.println("Clock: " + (t+10) + ", Memory Manager, SWAP: Variable" + c.getVar() + " with Variable " + r[0]);
+                    System.out.println("Clock: " + (r[2]) + ", Memory Manager, SWAP: Variable" + c.getVar() + " with Variable " + r[0]);
+                    writer("Clock: " + (r[2]) + ", Memory Manager, SWAP: Variable" + c.getVar() + " with Variable " + r[0]+ "\n");
                 }
                 break;
 
             case 'r':
-                System.out.println("Clock:" + t + ", " + title + ",Release: Variable" + c.getVar());
+                System.out.println("Clock:" + r[2] + ", " + title + ",Release: Variable" + c.getVar());
+                writer("Clock:" + r[2] + ", " + title + ",Release: Variable" + c.getVar()+ "\n");
                 break;
 
             case 'l':
-                System.out.println("Clock:" + t + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]);
-                if(r[0] == -1){
-                    System.out.println("Clock: " + (t+10) + ", ERROR variableID does NOT exist");
+                if(r[0]==-2){
+                System.out.println("Clock:" + r[2] + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]);
+                writer("Clock:" + r[2] + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]+ "\n");
+                }else if(r[0] == -1){
+                    System.out.println("Clock:" + r[2] + ", " + title + ",Lookup: Variable " + c.getVar() + "...");
+                    writer("Clock:" + r[2] + ", " + title + ",Lookup: Variable " + c.getVar() + "..."+ "\n");
+                    System.out.println("Clock: " + (r[2]) + ", ERROR variableID does NOT exist");
+                    writer("Clock: " + (r[2]) + ", ERROR variableID does NOT exist"+ "\n");
                 }else if(r[0] >= 0){
-                    System.out.println("Clock: " + (t+10) + ", Memory Manager, SWAP: Variable" + c.getVar() + " with Variable " + r[0]);
+                    System.out.println("Clock:" + r[2] + ", " + title + ",Lookup: Variable " + c.getVar() + "...");
+                    writer("Clock:" + r[2] + ", " + title + ",Lookup: Variable " + c.getVar() + "..."+ "\n");
+                    System.out.println("Clock: " + (r[2]) + ", Memory Manager, SWAP: Variable" + c.getVar() + " with Variable " + r[0]);
+                    writer("Clock: " + (r[2]) + ", Memory Manager, SWAP: Variable" + c.getVar() + " with Variable " + r[0]+ "\n");
+                    System.out.println("Clock:" + (r[2]) + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]);
+                    writer("Clock:" + (r[2]) + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]+ "\n");
                 }
                  break;
         }
-        //TODO add write to output
-    }
-
-    private synchronized void passTime(){
-        clock += bump;
-    }
-
-
-    private synchronized int timeStamp(int t, int x){
-        Random rand = new Random();
-        return t + x + rand.nextInt(1000-x);
     }
 }

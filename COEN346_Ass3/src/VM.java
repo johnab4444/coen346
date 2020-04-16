@@ -1,16 +1,24 @@
 import javax.swing.text.ViewFactory;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class VM extends Thread {
 
-    private ArrayList<Frames> mainMem;
+    private Frames[] mainMem;
     private int frameCount;
     private int frameCap;
     private boolean notDone;
     private boolean firstFill;
-    private Integer[] results = new Integer[2];
+    private int[] results = new int[3];
     private Filer vmFiler = new Filer("vm.txt",0);
+    private int clock;
+    private int lastClock;
+    private int bumps;
+    private int bump =1000;
+    private int execTime;
+    private int proCount;
+    private int commandCount = 0;
 
     public class Frames{
         private int variableID;
@@ -21,6 +29,12 @@ public class VM extends Thread {
             this.variableID = varID;
             this.value = val;
             this.lastAccess = t;
+        }
+
+        public Frames(){
+            this.variableID = 0;
+            this.lastAccess =0;
+            this.value =0;
         }
 
         public Frames updateFrame(ArrayList<Integer> temp){
@@ -52,23 +66,29 @@ public class VM extends Thread {
         }
     }
 
+
+
     public int getFrameCount(){
         return frameCount;
     }
 
-    public synchronized Integer[] executeC(char c, int var, Integer val, Integer t) throws IOException {
-        results[0] = null;
-        results[1] = null;
+    public synchronized int[] executeC(char c, int var, Integer val) throws IOException {
+        results[0] = -2;
+        results[1] = -2;
+        commandCount++;
+        execTime = timeStamp(clock,execTime);
+        clock = execTime;
+        passTime();
         switch(c){
             case 's':
-                return memStore(var, val, t);
+                return memStore(var, val, execTime);
 
 
             case 'r':
-               return memFree(var);
+               return memFree(var, execTime);
 
             case 'l':
-               return memLookUp(var, t);
+               return memLookUp(var, execTime);
 
 
             default:
@@ -76,10 +96,15 @@ public class VM extends Thread {
         }
     }
 
-    public VM(int memSize) throws IOException {
-        this.mainMem = new ArrayList<Frames>(memSize);
+    public VM(int memSize, int p, int c) throws IOException {
+        this.mainMem = new Frames[memSize];
         this.frameCap = memSize;
         this.frameCount =0;
+        this.clock =1000;
+        this.lastClock = 1000;
+        this.execTime =0;
+        this.proCount = p;
+        this.commandCount = c;
         this.notDone = true;
         this.firstFill = true;
     }
@@ -90,7 +115,7 @@ public class VM extends Thread {
 
     @Override
     public void run() {
-        while(notDone){
+        while(proCount > 0 && commandCount > 0){
             try {
                 sleep(1000);
             } catch (InterruptedException e) {
@@ -99,71 +124,94 @@ public class VM extends Thread {
         }
     }
 
-    public ArrayList<Frames> getMainMem() {
-        return mainMem;
-    }
 
-    public synchronized Integer[] memStore(int varID, int val, int t) throws IOException {
-        if(frameCount < frameCap && !firstFill){
-            mainMem.add(new Frames(varID, val, t));
+    public synchronized int[] memStore(int varID, int val, int t) throws IOException {
+        if(frameCount < frameCap && firstFill) {
+            mainMem[frameCount] = new Frames(varID, val, t);
             frameCount++;
-            if(frameCount == frameCap && firstFill){
+            if (frameCount == frameCap && firstFill) {
                 firstFill = false;
-            } else if (frameCount < frameCap){
-                mainMem.set(emptyFrame(),new Frames(varID, val, t));
-                frameCount++;
-            } else {
-                ArrayList<Integer> temp = vmFiler.vmWR(mainMem.get(oldest()).variableID, mainMem.get(oldest()).value, mainMem.get(oldest()).lastAccess, 's', varID);
-                results[0] = mainMem.get(oldest()).variableID;
-                results[1] = oldest();
-                mainMem.set(results[1], mainMem.get(results[1]).updateFrame(temp));
+            }
+        }else if (frameCount < frameCap){
+            mainMem[emptyFrame()].variableID = varID;
+            mainMem[emptyFrame()].value = val;
+            mainMem[emptyFrame()].lastAccess = t;
+            frameCount++;
+        } else {
+            int old = oldest();
+            ArrayList<Integer> temp = vmFiler.vmWR(mainMem[old].variableID, mainMem[old].value, mainMem[old].lastAccess, 's', varID);
+            if(temp==null){
+                int temporary = mainMem[old].variableID;
+                mainMem[old].variableID = varID;
+                mainMem[old].value = val;
+                mainMem[old].lastAccess = t;
+                results[0] = temporary;
+                results[1] = -1;
+                results[2] = t;
+                return results;
+            }else{
+                results[0] = mainMem[old].variableID;
+                results[1] = 0;
+                results[2] = t;
+                mainMem[old].variableID = temp.get(0);
+                mainMem[old].value = temp.get(1);
+                mainMem[old].lastAccess = t;
                 return results;
             }
         }
+
         results[0]=-1;
         results[1]=-1;
+        results[2]= t;
         return results;
     }
 
-    public synchronized Integer[] memFree(int varID) throws IOException {
+    public synchronized int[] memFree(int varID, int t) throws IOException {
         int a = isInMem(varID);
         if(a>=0){
-            mainMem.set(a, null);
+            mainMem[a].variableID =0;
             frameCount--;
+            results[0]=-1;
         }else{
             ArrayList<Integer> temp = vmFiler.vmWR(varID,null, null, 'r',null);
+            results[0]=temp.get(0);
         }
-        results[0]=-1;
+
         results[1]=-1;
+        results[2]= t;
         return results;
     }
 
 
-    public synchronized Integer[] memLookUp(int varID, int t) throws IOException {
+    public synchronized int[] memLookUp(int varID, int t) throws IOException {
         int a = isInMem(varID);
         if(a>=0){
-            mainMem.get(a).setLastAccess(t);
+            mainMem[a].lastAccess = t;
             results[0] = -2;
-            results[1] = mainMem.get(a).value;
+            results[1] = mainMem[a].value;
+            results[2] = t;
         }else{
-            ArrayList<Integer> temp = vmFiler.vmWR(mainMem.get(oldest()).variableID,mainMem.get(oldest()).value,mainMem.get(oldest()).lastAccess,'l',varID);
+            ArrayList<Integer> temp = vmFiler.vmWR(mainMem[oldest()].variableID,mainMem[oldest()].value,mainMem[oldest()].lastAccess,'l',varID);
             if(temp.get(0) == -1){
                 results[0] = -1;
                 results[1] = -1;
             }else {
                 int old = oldest();
-                temp.set(2, t);
-                mainMem.set(old, mainMem.get(old).updateFrame(temp));
+
+                mainMem[old].variableID = temp.get(0);
+                mainMem[old].value = temp.get(1);
+                mainMem[old].lastAccess =t;
                 results[0] = temp.get(0);
                 results[1] = temp.get(1);
             }
+            results[2] = t;
         }
         return results;
     }
 
     public int isInMem(int varID){
-        for(int i = 0;i<mainMem.size();i++){
-            if(mainMem.get(i).getVariableID() == (varID)){
+        for(int i = 0;i<mainMem.length;i++){
+            if(mainMem[i].variableID == (varID)){
                 return i;
             }
         }
@@ -172,13 +220,9 @@ public class VM extends Thread {
 
 
     public int emptyFrame(){
-        if(mainMem.isEmpty()){
-            return 0;
-        }else {
-            for (int i = 0; i < frameCap; i++) {
-                if (mainMem.get(i) == null) {
-                    return i;
-                }
+        for(int i=0; i<mainMem.length; i++){
+            if(mainMem[i].variableID == 0){
+                return i;
             }
         }
         return -1;
@@ -187,12 +231,52 @@ public class VM extends Thread {
     public int oldest(){
         int id = 0;
 
-        for(int i=1; i < mainMem.size(); i++){
-            if(mainMem.get(i).getLastAccess() < mainMem.get(id).getLastAccess()){
+        for(int i=1; i < mainMem.length; i++){
+            if(mainMem[i].lastAccess < mainMem[id].lastAccess){
                 id = i;
             }
         }
         return id;
+    }
+
+    private synchronized void passTime(){
+        if(bumps%2 == 0){
+            clock = lastClock + bump;
+            lastClock = clock;
+        }
+    }
+
+    private synchronized int chronological(){
+        if(execTime > clock){
+            return execTime;
+        }
+        else return clock;
+    }
+
+    public synchronized int readClock(){
+     return clock;
+    }
+
+    private synchronized int timeStamp(int t, int x){
+        Random rand = new Random();
+        bumps++;
+        if(x ==0){ return t + x + rand.nextInt(1000);}
+        else {
+            x -= t;
+            return t + x + rand.nextInt(1000-x);
+        }
+    }
+    public void checkCommand(int c){
+        commandCount = c;
+    }
+
+    public void yeetProcess(){
+        proCount--;
+    }
+
+    public boolean notFinished(){
+        if(commandCount > 0 && proCount > 0){return true;}
+        else {return false;}
     }
 }
 

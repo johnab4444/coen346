@@ -4,59 +4,88 @@ public class Process {
     private int arrivalTime;
     private int burstTime;
     private int cpuTime;
+    private int startTime;
     private int processCount;
     private boolean newbie;
     private int quantum = 3000;
-    private boolean done = false;
+    private boolean done;
     private int id;
     private ArrayList<Process> processes = new ArrayList<Process>();
     private ArrayList<Process> processQueue = new ArrayList<Process>();
 
-    //constructor
+    //constructors
+
+    public Process(int arrivalTime, int burstTime, int id) {
+        this.arrivalTime = arrivalTime*1000;
+        this.burstTime = burstTime*1000;
+        this.id = id;
+    }
+
     public Process(String[] data){
         processCount = Integer.parseInt(data[0]);
-        int max = data.length-1;
+        int max = data.length;
         int j = 0;
         int i = 1;
-        int count = 0;
+        int count = 1;
         do{
             processes.add(new Process(Integer.parseInt(data[count++]),Integer.parseInt(data[count++]), i++));
             processes.get(j).newbie = true;
+            processes.get(j).done = false;
             processes.get(j++).cpuTime = 0;
         }while(count<max);
     }
 
-    public void runOut(int t){
-        cpuTime += t;
-        burstTime -= t;
+    public Process(int p){
+        processCount = p;
+    }
+
+    public int checkTime(int t){
+        if((t-startTime) >= burstTime){
+            done = true;
+            return -1;
+        }else if((t-startTime) >= quantum){
+            return 1;
+        }
+        return -1;
     }
 
     public boolean isNewbie(){
         return newbie;
     }
 
-    public void notANewbie(){
+    public void notANewbie(int t){
+        startTime = t;
         newbie = false;
     }
 
-    public synchronized void deQueue(){
-        Process temp = new Process(processQueue.get(0).arrivalTime,processQueue.get(0).burstTime,processQueue.get(0).id);
-        processQueue.remove(0);
+    public synchronized void deQueue(int p){
+        if(p == processQueue.get(0).id) {
+            Process temp = new Process(processQueue.get(0).arrivalTime, processQueue.get(0).burstTime, processQueue.get(0).id);
+            processQueue.remove(0);
+        }else if(p == processQueue.get(1).id){
+            Process temp = new Process(processQueue.get(1).arrivalTime, processQueue.get(1).burstTime, processQueue.get(1).id);
+            processQueue.remove(1);
+        }
+    }
+
+    public boolean progress(int t){
+        if(t-arrivalTime >0){return true;}
+        else{return false;}
     }
 
     public boolean emptyQueue(){
         return processQueue.size() == 0;
     }
 
-    public synchronized Integer firstInLine(){
-        if(emptyQueue()){ return null;}
-        else {
-            return processQueue.get(0).id;
+    public synchronized boolean frontOfLine(int p){
+        if(emptyQueue()){ return false;}
+        else if(processQueue.get(0).id == p || processQueue.get(1).id == p){
+            return true;
         }
-
+        return false;
     }
 
-    public synchronized boolean canStillRun(int t){
+    public synchronized boolean canStillRun(){
         if(cpuTime < quantum && burstTime > 0){return true;}
         else if(cpuTime >= quantum && burstTime > 0){
             cpuTime = 0;
@@ -85,11 +114,6 @@ public class Process {
         }
     }
 
-    public Process(int arrivalTime, int burstTime, int id) {
-        this.arrivalTime = arrivalTime*1000;
-        this.burstTime = burstTime*1000;
-        this.id = id;
-    }
 
     public int getProcessCount() {
         return processCount;
