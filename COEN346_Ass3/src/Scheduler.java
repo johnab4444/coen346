@@ -35,7 +35,9 @@ public class Scheduler extends Thread {
     @Override
     public void run() {
 
+        //run thread until vmm is finished
         while(vmm.notFinished()){
+            //start vmm thread if it hasnt been started
             if(runVM){
                 vmThread = new Thread(vmm);
                 vmThread.start();
@@ -59,17 +61,18 @@ public class Scheduler extends Thread {
         synchronized (vmm){
 
             if(readyQueue.readyPro(process, vmm.readClock()) && readyQueue.frontRunner(process.getId())){
-                runningPros.acquire();
+                runningPros.acquire(); //acquire lock if available
                 readyQueue.deQueue(process);
+                //check if process is new to start it
                 if (process.isNewbie()) {
-                    System.out.println("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ",Started.");
-                    writer("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ",Started." + "\n");
+                    System.out.println("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ", Started.");
+                    writer("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ", Started." + "\n");
                     process.notANewbie(vmm.readClock());
                 } else if(vmm.readClock()%1000 == 0){
-                    System.out.println("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ",Resumed");
-                    writer("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ",Resumed"+ "\n");
+                    System.out.println("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ", Resumed");
+                    writer("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ", Resumed"+ "\n");
                 }
-                commandKey.acquire();
+                commandKey.acquire(); //acquire the lock to run a command if available
                 doCommand = commandList.nextCommand();
                 result = vmm.executeC(doCommand.getCommand(), doCommand.getVar(), doCommand.getValue());
                 printOut(result, doCommand, currentThread().getName());
@@ -80,14 +83,14 @@ public class Scheduler extends Thread {
                 if(process.isDone() || p ==-2 || commandList.seeCommandCount()==0){
                     vmm.yeetProcess();
                     readyQueue.yeetProcess(process);
-                    System.out.println("Clock: " + vmm.readClock() + currentThread().getName() + ": Finished.");
-                    writer("Clock: " + vmm.readClock() + currentThread().getName() + ": Finished."+ "\n");
+                    System.out.println("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ", Finished.");
+                    writer("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ", Finished."+ "\n");
                     runningPros.release();
                     commandKey.release();
                     vmm.notifyAll();
                 }else if(p>0 || readyQueue.othersWaiting(process, vmm.readClock())){
-                    System.out.println("Clock: " + vmm.readClock() + currentThread().getName() + ": Paused");
-                    writer("Clock: " + vmm.readClock() + currentThread().getName() + ": Paused"+ "\n");
+                    System.out.println("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ", Paused");
+                    writer("Clock: " + vmm.readClock() + ", " + currentThread().getName() + ", Paused"+ "\n");
                     runningPros.release();
                     commandKey.release();
                     vmm.notifyAll();
@@ -106,38 +109,39 @@ public class Scheduler extends Thread {
         }
     }
 
+    //write to output file depending on command
     private synchronized void printOut(int[] r, Commander c, String title) throws IOException {
         switch (c.getCommand()){
             case 's':
-                System.out.println("Clock:" + vmm.chronological() + ", " + title + ",Store: Variable " + c.getVar() + ", Value: " + c.getValue());
-                writer("Clock:" + vmm.chronological() + ", " + title + ",Store: Variable " + c.getVar() + ", Value: " + c.getValue()+ "\n");
+                System.out.println("Clock: " + vmm.chronological() + ", " + title + ", Store: Variable " + c.getVar() + ", Value: " + c.getValue());
+                writer("Clock: " + vmm.chronological() + ", " + title + ", Store: Variable " + c.getVar() + ", Value: " + c.getValue()+ "\n");
                 if(r[0] >= 0){
-                    System.out.println("Clock: " + vmm.chronological() + ", Memory Manager, SWAP: Variable" + c.getVar() + " with Variable " + r[0]);
-                    writer("Clock: " + vmm.chronological() + ", Memory Manager, SWAP: Variable" + c.getVar() + " with Variable " + r[0]+ "\n");
+                    System.out.println("Clock: " + vmm.chronological() + ", Memory Manager, SWAP: Variable " + c.getVar() + " with Variable " + r[0]);
+                    writer("Clock: " + vmm.chronological() + ", Memory Manager, SWAP: Variable " + c.getVar() + " with Variable " + r[0]+ "\n");
                 }
                 break;
 
             case 'r':
-                System.out.println("Clock:" + vmm.chronological() + ", " + title + ",Release: Variable" + c.getVar());
-                writer("Clock:" + vmm.chronological() + ", " + title + ",Release: Variable" + c.getVar()+ "\n");
+                System.out.println("Clock: " + vmm.chronological() + ", " + title + ", Release: Variable " + c.getVar());
+                writer("Clock: " + vmm.chronological() + ", " + title + ", Release: Variable " + c.getVar()+ "\n");
                 break;
 
             case 'l':
                 if(r[0]==-2){
-                System.out.println("Clock:" + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]);
-                writer("Clock:" + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]+ "\n");
+                System.out.println("Clock: " + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]);
+                writer("Clock: " + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]+ "\n");
                 }else if(r[0] == -1){
-                    System.out.println("Clock:" + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + "...");
-                    writer("Clock:" + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + "..."+ "\n");
+                    System.out.println("Clock: " + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + "...");
+                    writer("Clock: " + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + "..."+ "\n");
                     System.out.println("Clock: " + vmm.chronological() + ", ERROR variableID does NOT exist");
                     writer("Clock: " + vmm.chronological() + ", ERROR variableID does NOT exist"+ "\n");
                 }else if(r[0] >= 0){
-                    System.out.println("Clock:" + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + "...");
-                    writer("Clock:" + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + "..."+ "\n");
-                    System.out.println("Clock: " + vmm.chronological() + ", Memory Manager, SWAP: Variable" + c.getVar() + " with Variable " + r[0]);
-                    writer("Clock: " + vmm.chronological() + ", Memory Manager, SWAP: Variable" + c.getVar() + " with Variable " + r[0]+ "\n");
-                    System.out.println("Clock:" + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]);
-                    writer("Clock:" + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + ", Value: " + r[1]+ "\n");
+                    System.out.println("Clock: " + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + "...");
+                    writer("Clock: " + vmm.chronological() + ", " + title + ",Lookup: Variable " + c.getVar() + "..."+ "\n");
+                    System.out.println("Clock: " + vmm.chronological() + ", Memory Manager, SWAP: Variable"  + c.getVar() + " with Variable " + r[0]);
+                    writer("Clock: " + vmm.chronological() + ", Memory Manager, SWAP: Variable " + c.getVar() + " with Variable " + r[0]+ "\n");
+                    System.out.println("Clock: " + vmm.chronological() + ", " + title + ", Lookup: Variable " + c.getVar() + ", Value: " + r[1]);
+                    writer("Clock: " + vmm.chronological() + ", " + title + ", Lookup: Variable " + c.getVar() + ", Value: " + r[1]+ "\n");
                 }
                  break;
         }

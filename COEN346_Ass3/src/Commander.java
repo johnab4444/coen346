@@ -20,7 +20,7 @@ public class Commander {
     }
 
 
-
+    //number of commands
     public int seeCommandCount(){
         return commandCount;
     }
@@ -42,7 +42,7 @@ public class Commander {
     }
 
 
-
+    //check next command to run
     public synchronized Commander nextCommand(){
         Commander temp = new Commander(commandList.get(0).command, commandList.get(0).var, commandList.get(0).value);
         commandList.remove(0);

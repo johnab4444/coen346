@@ -21,6 +21,8 @@ public class Filer {
         this.vmSize = size;
     }
 
+
+    //organize the commands after reading the file
     public void commandOrganizer(String[] data){
         int check = data.length;
         do{
@@ -41,6 +43,7 @@ public class Filer {
         }while(check > pos);
     }
 
+    //write to vm.txt depending on the commands
     public synchronized ArrayList<Integer> vmWR(Integer varID, Integer val, Integer t, char com, Integer returnID) throws IOException {
         switch(com){
             case 's':
@@ -68,8 +71,8 @@ public class Filer {
                             for(int j=0; j<vars.size(); j++){
                                 fileWriter.write(vars.get(j) +  " " + vals.get(j) + " " + accesst.get(j) + '\n');
                             }
-                            /*fileWriter.flush();
-                            fileWriter.close();*/
+                            fileWriter.flush();
+                            fileWriter.close();
                             return temp;
                         }
                     }
@@ -157,7 +160,7 @@ public class Filer {
 
     }
 
-
+    //read from file function
     public String readFile() {
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(name)));

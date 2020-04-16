@@ -20,6 +20,7 @@ public class VM extends Thread {
     private int proCount;
     private int commandCount = 0;
 
+    //class for frame object
     public class Frames{
         private int variableID;
         private int value;
@@ -72,6 +73,8 @@ public class VM extends Thread {
         return frameCount;
     }
 
+
+    //execute specified command
     public synchronized int[] executeC(char c, int var, Integer val) throws IOException {
         results[0] = -2;
         results[1] = -2;
@@ -109,12 +112,14 @@ public class VM extends Thread {
         this.firstFill = true;
     }
 
+    //check if vm thread is done
     public void allDone(){
         this.notDone = false;
     }
 
     @Override
     public void run() {
+        //terminate thread when process count is 0 and command count is 0
         while(proCount > 0 && commandCount > 0){
             try {
                 sleep(1000);
@@ -125,6 +130,7 @@ public class VM extends Thread {
     }
 
 
+    //memory store function
     public synchronized int[] memStore(int varID, int val, int t) throws IOException {
         if(frameCount < frameCap && firstFill) {
             mainMem[frameCount] = new Frames(varID, val, t);
@@ -161,6 +167,7 @@ public class VM extends Thread {
         return results;
     }
 
+    //memory release function
     public synchronized int[] memFree(int varID, int t) throws IOException {
         int a = isInMem(varID);
         if(a>=0){
@@ -176,7 +183,7 @@ public class VM extends Thread {
         return results;
     }
 
-
+    //memory lookup function
     public synchronized int[] memLookUp(int varID, int t) throws IOException {
         int a = isInMem(varID);
         if(a>=0){
@@ -201,6 +208,7 @@ public class VM extends Thread {
         return results;
     }
 
+    //check if frame is in main memory
     public int isInMem(int varID){
         for(int i = 0;i<mainMem.length;i++){
             if(mainMem[i].variableID == (varID)){
@@ -210,7 +218,7 @@ public class VM extends Thread {
         return -1;
     }
 
-
+    //check if frame is empty
     public int emptyFrame(){
         for(int i=0; i<mainMem.length; i++){
             if(mainMem[i].variableID == 0){
@@ -226,6 +234,7 @@ public class VM extends Thread {
         }
     }
 
+    //find oldest frame
     public int oldest(){
         int id = 0;
 
@@ -237,7 +246,7 @@ public class VM extends Thread {
         return id;
     }
 
-
+    //place time in chronological order
     public synchronized int chronological(){
         if(execTime > clock){
             return execTime;
@@ -245,6 +254,7 @@ public class VM extends Thread {
         else return clock;
     }
 
+    //read the clock
     public synchronized int readClock(){
         if(execTime < clock){
             execTime = clock;
@@ -252,6 +262,7 @@ public class VM extends Thread {
      return clock;
     }
 
+    //increment clock
     private synchronized int ticTock(int t, int x){
         Random rand = new Random();
         bumps++;

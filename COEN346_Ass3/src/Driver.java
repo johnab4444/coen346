@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 public class Driver {
     public static void main(String[] args) throws IOException, InterruptedException {
-        Commander commanders;
+        Commander commanders; //will hold all our commands
         Filer filerC = new Filer("commands.txt");
         Filer filerP = new Filer("processes.txt");
         Filer filerM = new Filer("memconfig.txt");
@@ -20,9 +20,9 @@ public class Driver {
 
 
 
-        String[] commandInput = filerC.readFile().split("\\s+");
-        String[] processInput = filerP.readFile().split("\\s+");
-        String[] memconfigInput = filerM.readFile().split("\\s+");
+        String[] commandInput = filerC.readFile().split("\\s+"); //read commands.txt
+        String[] processInput = filerP.readFile().split("\\s+"); //read processes.txt
+        String[] memconfigInput = filerM.readFile().split("\\s+"); //read memconfig.txt
 
 
         filerC.commandOrganizer(commandInput);
@@ -42,10 +42,12 @@ public class Driver {
                     .get(i).getId());
         }
 
+        //start all process threads
         for (int i = 0; i < threads.length; i++) {
             threads[i].start();
         }
 
+        //join all process threads
         for (int i = 0; i < threads.length; i++) {
             threads[i].join();
         }
